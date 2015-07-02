@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model name="pldwf:policyWorkflowModel" xmlns="http://www.alfresco.org/model/dictionary/1.0">
+
+	<!-- Optional meta-data about the model -->
+	<description>Policy Workflow Model</description>
+	<author>Your Name</author>
+	<version>1.0</version>
+
+	<imports>
+		<import uri="http://www.alfresco.org/model/dictionary/1.0"
+			prefix="d" />
+		<import uri="http://www.alfresco.org/model/content/1.0" prefix="cm" />
+		<import uri="http://www.alfresco.org/model/bpm/1.0" prefix="bpm" />
+	</imports>
+
+	<namespaces>
+		<namespace uri="http://www.alfresco.com/model/demo/policyworkflow/1.0"
+			prefix="pldwf" />
+	</namespaces>
+
+	<types>
+		<type name="pldwf:startTask">
+			<title>Start Workflow</title>
+			<parent>bpm:startTask</parent>
+			<properties>
+				<property name="pldwf:declareAsRecord">
+					<type>d:boolean</type>
+					<default>false</default>
+				</property>
+			</properties>
+			<overrides>
+				<property name="bpm:packageActionGroup">
+					<default>add_package_item_actions</default>
+				</property>
+				<property name="bpm:packageItemActionGroup">
+					<default>edit_package_item_actions</default>
+				</property>
+			</overrides>
+			<mandatory-aspects>
+				<aspect>bpm:assignee</aspect>
+				<aspect>pldwf:legal</aspect>
+				<aspect>pldwf:pubfolder</aspect>
+			</mandatory-aspects>
+		</type>
+		<type name="pldwf:createTask">
+			<title>Create Draft Policy</title>
+			<parent>bpm:workflowTask</parent>
+		</type>
+		<type name="pldwf:reviseTask">
+			<title>Revise Draft Policy</title>
+			<parent>bpm:workflowTask</parent>
+		</type>
+		<type name="pldwf:reviewTask">
+			<title>Review Draft Policy</title>
+			<parent>bpm:activitiOutcomeTask</parent>
+			<properties>
+				<property name="pldwf:reviewOutcome">
+					<type>d:text</type>
+					<default>Revise</default>
+					<constraints>
+						<constraint name="pldwf:reviewOutcomeOptions" type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>Revise</value>
+									<value>Approve</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+			</properties>
+			<overrides>
+				<property name="bpm:packageActionGroup">
+					<default>read_package_item_actions</default>
+				</property>
+				<property name="bpm:packageItemActionGroup">
+					<default>edit_package_item_actions</default>
+				</property>
+			</overrides>
+		</type>
+		<type name="pldwf:approvalTask">
+			<title>Approve Policy</title>
+			<parent>bpm:activitiOutcomeTask</parent>
+			<properties>
+				<property name="pldwf:approvalOutcome">
+					<type>d:text</type>
+					<default>Approve</default>
+					<constraints>
+						<constraint name="pldwf:approvalOutcomeOptions"
+							type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>Approve</value>
+									<value>Reject</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+			</properties>
+			<overrides>
+				<property name="bpm:packageActionGroup">
+					<default>read_package_item_actions</default>
+				</property>
+				<property name="bpm:packageItemActionGroup">
+					<default>edit_package_item_actions</default>
+				</property>
+			</overrides>
+		</type>
+		<type name="pldwf:rejectedTask">
+			<title>Rejected Task</title>
+			<parent>bpm:workflowTask</parent>
+		</type>
+	</types>
+
+	<aspects>
+		<aspect name="pldwf:legal">
+			<associations>
+				<association name="pldwf:legal">
+					<source>
+						<mandatory>true</mandatory>
+						<many>false</many>
+					</source>
+					<target>
+						<class>cm:person</class>
+						<mandatory>true</mandatory>
+						<many>false</many>
+					</target>
+				</association>
+			</associations>
+		</aspect>
+		<aspect name="pldwf:pubfolder">
+			<associations>
+				<association name="pldwf:pubfolder">
+					<source>
+						<mandatory>false</mandatory>
+						<many>false</many>
+					</source>
+					<target>
+						<class>cm:folder</class>
+						<mandatory>false</mandatory>
+						<many>false</many>
+					</target>
+				</association>
+			</associations>
+		</aspect>
+	</aspects>
+</model>

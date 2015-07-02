@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+	<!-- The bootstrap-context.xml file is used for patch definitions, importers, 
+		workflow, and loading custom content models. -->
+
+
+	<!-- Registration of new models -->
+	<bean id="com.alfresco.demo.dictionaryBootstrap" parent="dictionaryModelBootstrap"
+		depends-on="dictionaryBootstrap">
+		<property name="models">
+			<list>
+				<value>alfresco/module/${project.artifactId}/model/content-model.xml</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="policyDataModelMappingConfiguration"
+		class="org.alfresco.enterprise.repo.officeservices.metadata.StandardDataModelMappingConfiguration"
+		parent="aosBaseDataModelMappingConfiguration">
+		<property name="includedAspectsPatterns">
+			<list merge="true">
+				<value>\Q{http://www.alfresco.com/model/demo/policy/1.0}\E.*</value>
+				<value>\Q{http://www.alfresco.org/model/content/1.0}titled\E</value>
+				<value>\Q{http://www.alfresco.org/model/content/1.0}author\E</value>
+			</list>
+		</property>
+		<property name="excludedAspectsPatterns">
+			<list merge="true">
+				<value>\Q{http://www.alfresco.org/model/content/1.0}effectivity\E
+				</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="policyWorkflowBootstrap" parent="workflowDeployer">
+		<property name="workflowDefinitions">
+			<list>
+				<props>
+					<prop key="engineId">activiti</prop>
+					<prop key="location">alfresco/module/${project.artifactId}/workflow/policyWorkflow.bpmn</prop>
+					<prop key="mimetype">text/xml</prop>
+					<prop key="redeploy">true</prop>
+				</props>
+			</list>
+		</property>
+		<property name="models">
+			<list>
+				<value>alfresco/module/${project.artifactId}/workflow/workflow-model.xml</value>
+			</list>
+		</property>
+		<property name="labels">
+			<list>
+				<value>alfresco.module.${project.artifactId}.workflow.workflow</value>
+			</list>
+		</property>
+	</bean>
+
+
+
+</beans>

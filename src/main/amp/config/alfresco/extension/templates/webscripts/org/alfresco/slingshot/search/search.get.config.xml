@@ -1,0 +1,4 @@
+<search>
+   <default-operator>AND</default-operator>
+   <default-query-template>%(cm:name cm:title cm:description ia:whatEvent ia:descriptionEvent lnk:title lnk:description TEXT TAG pld:policyType pld:status)</default-query-template>
+</search>
