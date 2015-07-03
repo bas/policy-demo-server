@@ -1,8 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans
-          http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amq="http://activemq.apache.org/schema/core"
+	xmlns:jms="http://www.springframework.org/schema/jms" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+		http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core-5.2.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd	
+		http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms-3.0.xsd">
+
 
 	<!-- The bootstrap-context.xml file is used for patch definitions, importers, 
 		workflow, and loading custom content models. -->
@@ -30,8 +34,7 @@
 		</property>
 		<property name="excludedAspectsPatterns">
 			<list merge="true">
-				<value>\Q{http://www.alfresco.org/model/content/1.0}effectivity\E
-				</value>
+				<value>\Q{http://www.alfresco.org/model/content/1.0}effectivity\E</value>
 			</list>
 		</property>
 	</bean>
@@ -59,6 +62,43 @@
 		</property>
 	</bean>
 
+	<!-- The following beans are for configuring the JMS messaging system -->
+	<context:component-scan base-package="com.alfresco.demo" />
+	<context:annotation-config />
 
+	<amq:connectionFactory id="amqConnectionFactory"
+		brokerURL="tcp://192.168.10.10:61616" />
 
+	<bean id="connectionFactory"
+		class="org.springframework.jms.connection.CachingConnectionFactory">
+		<constructor-arg ref="amqConnectionFactory" />
+		<property name="exceptionListener" ref="jmsExceptionListener" />
+		<property name="sessionCacheSize" value="100" />
+	</bean>
+
+	<bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+		<constructor-arg ref="connectionFactory" />
+	</bean>
+
+	<bean id="policyApprovalMessageListener" class="com.alfresco.demo.bpm.PolicyApprovalMessageListener">
+		<property name="serviceRegistry">
+			<ref bean="ServiceRegistry" />
+		</property>
+	</bean>
+
+	<!-- Add the approval message listener class allowing the workflow to send a message to JMS once the policy document has been approved -->
+	<bean id="activitiBeanRegistryOverride"
+		class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"
+		depends-on="activitiBeanRegistry">
+		<property name="targetObject">
+			<ref bean="activitiBeanRegistry" />
+		</property>
+		<property name="targetMethod" value="put" />
+		<property name="arguments">
+			<list>
+				<value>PolicyApprovalMessageListener</value>
+				<ref bean="policyApprovalMessageListener" />
+			</list>
+		</property>
+	</bean>
 </beans>

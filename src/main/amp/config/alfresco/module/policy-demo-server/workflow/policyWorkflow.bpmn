@@ -44,6 +44,7 @@
         <activiti:field name="script">
           <activiti:string><![CDATA[<import resource="classpath:alfresco/module/policy-demo-server/workflow/scripts/approve.js">]]></activiti:string>
         </activiti:field>
+        <activiti:executionListener event="end" delegateExpression="${PolicyApprovalMessageListener}"></activiti:executionListener>
       </extensionElements>
     </serviceTask>
     <sequenceFlow id="flow43" sourceRef="exclusivegateway2" targetRef="alfrescoScripttask3"></sequenceFlow>
