@@ -1,8 +1,8 @@
 package com.alfresco.demo.bpm;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -15,10 +15,10 @@ import org.alfresco.repo.workflow.WorkflowNotificationUtils;
 import org.alfresco.repo.workflow.activiti.ActivitiScriptNode;
 import org.alfresco.service.ServiceRegistry;
 import org.alfresco.service.cmr.repository.NodeRef;
-import org.alfresco.service.namespace.QName;
 import org.alfresco.util.UrlUtil;
-import org.apache.chemistry.opencmis.server.support.filter.JsonPrettyPrinter;
-import org.json.simple.JSONObject;
+import org.apache.abdera.Abdera;
+import org.apache.abdera.model.Entry;
+import org.apache.abdera.model.Feed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
@@ -52,28 +52,46 @@ public class PolicyApprovalMessageListener implements ExecutionListener {
 	NodeRef nodeRef = serviceRegistry.getNodeService()
 		.getChildAssocs(packagenode).get(0).getChildRef();
 
+	jmsTemplate.send("alfresco.policy.approval", new MessageCreator() {
+	    public Message createMessage(Session session) throws JMSException {
+		try {
+		    return session.createTextMessage(getFeed(nodeRef));
+		} catch (IOException e) {
+		    throw new JMSException(e.getLocalizedMessage());
+		}
+	    }
+	});
+    }
+
+    private String getFeed(NodeRef nodeRef) throws IOException {
 	String name = (String) serviceRegistry.getNodeService().getProperty(
 		nodeRef, ContentModel.PROP_NAME);
-	
+
 	String url = UrlUtil.getShareUrl(serviceRegistry.getSysAdminParams())
 		+ "/page/site/"
 		+ serviceRegistry.getSiteService().getSite(nodeRef)
 			.getShortName() + "/document-details?nodeRef="
 		+ nodeRef.toString();
 
-	jmsTemplate.send("alfresco.policy.approval", new MessageCreator() {
-	    public Message createMessage(Session session) throws JMSException {
+	Abdera abdera = Abdera.getInstance();
+	Feed feed = abdera.newFeed();
 
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("event", "Policy document " + name + " approved");
-		map.put("url", url);
-		map.put("date", new Date());
-		JsonPrettyPrinter printer = new JsonPrettyPrinter(2);
-		return session.createTextMessage(printer.prettyPrint(JSONObject
-			.toJSONString(map)));
+	feed.setId(nodeRef.getId() + "/feed");
+	feed.setTitle("Policy Approval");
+	feed.setUpdated(new Date());
+	feed.addAuthor(serviceRegistry.getAuthenticationService()
+		.getCurrentUserName());
 
-	    }
-	});
+	Entry entry = feed.addEntry();
+	entry.setId(nodeRef.getId() + "/entry");
+	entry.setTitle(name);
+	entry.setUpdated(new Date());
+	entry.setPublished(new Date());
+	entry.addLink(url);
+
+	StringWriter w = new StringWriter();
+	abdera.getWriterFactory().getWriter("prettyxml").writeTo(feed, w);
+
+	return w.toString();
     }
-
 }
