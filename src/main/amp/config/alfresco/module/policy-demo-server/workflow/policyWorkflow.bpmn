@@ -20,6 +20,7 @@
     <sequenceFlow id="flow33" sourceRef="usertask5" targetRef="usertask4"></sequenceFlow>
     <userTask id="usertask6" name="Submit for Approval" activiti:assignee="${bpm_assignee.properties.userName}" activiti:formKey="pldwf:approvalTask">
       <extensionElements>
+        <activiti:taskListener event="create" delegateExpression="${ApprovalNotificationListener}"></activiti:taskListener>
         <activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
           <activiti:field name="script">
             <activiti:string><![CDATA[execution.setVariable('pldwf_approvalOutcome', task.getVariable('pldwf_approvalOutcome'));]]></activiti:string>

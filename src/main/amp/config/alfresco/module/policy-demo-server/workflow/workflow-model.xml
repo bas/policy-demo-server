@@ -27,6 +27,10 @@
 					<type>d:boolean</type>
 					<default>false</default>
 				</property>
+				<property name="pldwf:broadcast">
+					<type>d:boolean</type>
+					<default>false</default>
+				</property>
 			</properties>
 			<overrides>
 				<property name="bpm:packageActionGroup">

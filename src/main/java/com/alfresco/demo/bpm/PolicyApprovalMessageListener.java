@@ -45,22 +45,28 @@ public class PolicyApprovalMessageListener implements ExecutionListener {
     @Override
     public void notify(DelegateExecution execution) throws Exception {
 
-	ActivitiScriptNode scriptNode = (ActivitiScriptNode) execution
-		.getVariable(WorkflowNotificationUtils.PROP_PACKAGE);
+	boolean broadcast = (boolean) execution.getVariable("pldwf_broadcast");
 
-	NodeRef packagenode = scriptNode.getNodeRef();
-	NodeRef nodeRef = serviceRegistry.getNodeService()
-		.getChildAssocs(packagenode).get(0).getChildRef();
+	if (broadcast) {
 
-	jmsTemplate.send("alfresco.policy.approval", new MessageCreator() {
-	    public Message createMessage(Session session) throws JMSException {
-		try {
-		    return session.createTextMessage(getFeed(nodeRef));
-		} catch (IOException e) {
-		    throw new JMSException(e.getLocalizedMessage());
+	    ActivitiScriptNode scriptNode = (ActivitiScriptNode) execution
+		    .getVariable(WorkflowNotificationUtils.PROP_PACKAGE);
+
+	    NodeRef packagenode = scriptNode.getNodeRef();
+	    NodeRef nodeRef = serviceRegistry.getNodeService()
+		    .getChildAssocs(packagenode).get(0).getChildRef();
+
+	    jmsTemplate.send("alfresco.policy.approval", new MessageCreator() {
+		public Message createMessage(Session session)
+			throws JMSException {
+		    try {
+			return session.createTextMessage(getFeed(nodeRef));
+		    } catch (IOException e) {
+			throw new JMSException(e.getLocalizedMessage());
+		    }
 		}
-	    }
-	});
+	    });
+	}
     }
 
     private String getFeed(NodeRef nodeRef) throws IOException {

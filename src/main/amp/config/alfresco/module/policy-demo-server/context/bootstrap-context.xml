@@ -86,8 +86,29 @@
 		</property>
 	</bean>
 
+	<bean id="approvalNotificationListener" class="com.alfresco.demo.bpm.ApprovalNotificationListener">
+		<property name="serviceRegistry">
+			<ref bean="ServiceRegistry" />
+		</property>
+	</bean>
+
 	<!-- Add the approval message listener class allowing the workflow to send a message to JMS once the policy document has been approved -->
 	<bean id="activitiBeanRegistryOverride"
+		class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"
+		depends-on="activitiBeanRegistry">
+		<property name="targetObject">
+			<ref bean="activitiBeanRegistry" />
+		</property>
+		<property name="targetMethod" value="put" />
+		<property name="arguments">
+			<list>
+				<value>ApprovalNotificationListener</value>
+				<ref bean="approvalNotificationListener" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="activitiBeanRegistryOverride2"
 		class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"
 		depends-on="activitiBeanRegistry">
 		<property name="targetObject">
